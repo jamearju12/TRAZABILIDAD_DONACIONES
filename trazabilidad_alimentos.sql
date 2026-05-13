@@ -12,6 +12,7 @@ CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
     rol_id INT NOT NULL,
     activo TINYINT(1) NOT NULL DEFAULT 1,
     fecha_creacion DATETIME NOT NULL,
@@ -162,8 +163,17 @@ INSERT INTO sedes (nombre, direccion, ciudad, fecha_creacion)
 SELECT 'Sede Central', 'Calle 1 # 10-20', 'Bogota', NOW()
 WHERE NOT EXISTS (SELECT 1 FROM sedes WHERE nombre = 'Sede Central');
 
-INSERT INTO usuarios (nombre, email, rol_id, activo, fecha_creacion)
-SELECT 'Usuario Admin', 'admin@trazabilidad.local', r.id, 1, NOW()
+INSERT INTO usuarios (nombre, email, password_hash, rol_id, activo, fecha_creacion)
+SELECT
+    'Usuario Admin',
+    'admin@trazabilidad.local',
+    -- Hash bcrypt de la contrasena inicial. Generar con:
+    --   python3 setup_admin.py
+    -- NUNCA usar este valor en produccion sin cambiarlo primero.
+    '$2b$12$PLACEHOLDER_RUN_setup_admin.py_TO_SET_REAL_HASH______',
+    r.id,
+    1,
+    NOW()
 FROM roles r
 WHERE r.nombre = 'ADMIN'
   AND NOT EXISTS (SELECT 1 FROM usuarios WHERE email = 'admin@trazabilidad.local');
