@@ -13,27 +13,43 @@ Entrega parcial del sistema de trazabilidad para gestión de donaciones de alime
 ✅ **Repositorios especializados** para operaciones CRUD y consultas de trazabilidad  
 ✅ **Stored procedures y consultas SQL** para inventario, lotes y movimientos  
 ✅ **Soporte de borrado lógico** en donantes para conservar trazabilidad histórica  
+✅ **API REST Flask** con 27 endpoints HTTP protegidos  
+✅ **Autenticación JWT (HS256)** con expiración configurable  
+✅ **Contraseñas hasheadas con bcrypt** (factor de costo 12, estándar OWASP)  
 
 ## Especificaciones técnicas
 
 - **Lenguaje**: Python 3.8+
+- **Framework API**: Flask 3.0+
 - **Base de datos**: MySQL 5.7+ / MariaDB 10.3+
 - **Acceso a datos**: pyodbc + patrón Repository + Stored Procedures
+- **Autenticación**: PyJWT 2.8+ (HS256)
+- **Encriptación**: bcrypt 4.0+ (cost factor 12)
 - **Gestión de secretos**: Variables de entorno con python-dotenv
 - **Licencia**: LGPL 2.1 o posterior
 
-## Alcance de esta entrega
+## Alcance
 
-Esta carpeta no incluye la API ni la capa final de servicios. El alcance entregado llega hasta:
+El proyecto incluye la capa de persistencia completa más la API REST con autenticación:
 
 - Conexión a base de datos
 - Definición de modelos
 - Implementación de repositorios
 - Script de creación de esquema, datos base y procedimientos almacenados
+- API REST Flask con autenticación JWT
+- Módulo de seguridad con bcrypt y JWT
 
 ## Estructura
 
 ```
+├── main_trazabilidad.py
+│   └─ Punto de entrada de la aplicación
+├── api_trazabilidad.py
+│   └─ Endpoints REST Flask (27 rutas protegidas + /login)
+├── auth_trazabilidad.py
+│   └─ JWT, bcrypt y decorador @requiere_jwt
+├── setup_admin.py
+│   └─ Script único para crear/actualizar contraseña del admin
 ├── database_trazabilidad.py
 │   └─ Capa de conexión con gestión segura de credenciales
 ├── models_trazabilidad.py
@@ -130,6 +146,10 @@ Editar `.env` con credenciales reales:
 - `DB_NAME`
 - `DB_USER`
 - `DB_PASSWORD`
+- `JWT_SECRET_KEY` (mínimo 32 caracteres, generar con `python3 -c "import secrets; print(secrets.token_hex(32))"`)
+- `JWT_EXPIRATION_HOURS` (por defecto `8`)
+- `API_HOST` (por defecto `127.0.0.1`)
+- `API_PORT` (por defecto `8090`)
 
 ## Repositorios incluidos
 
@@ -142,7 +162,7 @@ Editar `.env` con credenciales reales:
 
 ## Uso
 
-Los repositorios se consumen desde scripts Python o pruebas de integración. No hay endpoints HTTP en esta entrega.
+La API expone endpoints REST protegidos con JWT. Todos los requests (excepto `/health` y `/login`) requieren el header `Authorization: Bearer <token>`.
 
 ### Ejemplo mínimo de conexión
 
@@ -165,9 +185,46 @@ repo = DonantesRepository()
 print(repo.get_all())
 ```
 
+### 7. Configurar contraseña del administrador
+
+```bash
+python3 setup_admin.py
+```
+
+Este script solicita una contraseña para `admin@trazabilidad.local`, genera el hash bcrypt y lo guarda en la base de datos. Ejecutar **una sola vez** después de cargar el SQL.
+
+### 8. Iniciar la API
+
+**macOS/Linux**
+
+```bash
+python3 api_trazabilidad.py
+```
+
+**Windows**
+
+```powershell
+py -3 api_trazabilidad.py
+```
+
+La API quedará disponible en `http://127.0.0.1:8090/trazabilidad/`.
+
 ### Consultar ejemplos de uso
 
-Ver [EJEMPLOS.md](EJEMPLOS.md) para ejemplos de uso directo desde Python.
+Ver [EJEMPLOS.md](EJEMPLOS.md) para ejemplos de autenticación y uso de endpoints via curl.
+
+## Endpoints principales
+
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| GET | `/trazabilidad/health` | No | Estado de la API y BD |
+| POST | `/trazabilidad/login` | No | Obtener token JWT |
+| GET | `/trazabilidad/donantes` | JWT | Listar donantes |
+| POST | `/trazabilidad/donantes` | JWT | Crear donante |
+| GET | `/trazabilidad/productos` | JWT | Listar productos |
+| POST | `/trazabilidad/donaciones` | JWT | Registrar donación |
+| GET | `/trazabilidad/inventario/vigente` | JWT | Inventario disponible |
+| GET | `/trazabilidad/trazabilidad/lote/{id}` | JWT | Trazabilidad de lote |
 
 ## Notas de diseño
 
