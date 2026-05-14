@@ -2,46 +2,38 @@
 
 [![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](https://www.gnu.org/licenses/lgpl-2.1.html)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-green)](https://www.python.org/downloads/)
+[![Flask](https://img.shields.io/badge/Framework-Flask-brightgreen)](https://flask.palletsprojects.com/)
 [![MySQL](https://img.shields.io/badge/Database-MySQL-blue)](https://www.mysql.com/)
 
-Entrega parcial del sistema de trazabilidad para gestión de donaciones de alimentos. Esta versión llega hasta la capa de acceso a datos: conexión a base de datos, modelos de dominio, repositorios y script SQL.
+Sistema integral de trazabilidad para gestión de donaciones de alimentos en fundaciones y organizaciones sin ánimo de lucro, bajo principios de software libre.
 
 ## Características principales
 
-✅ **Conexión parametrizada** por variables de entorno  
-✅ **Modelos de dominio** para donantes, productos, donaciones y entregas  
-✅ **Repositorios especializados** para operaciones CRUD y consultas de trazabilidad  
-✅ **Stored procedures y consultas SQL** para inventario, lotes y movimientos  
-✅ **Soporte de borrado lógico** en donantes para conservar trazabilidad histórica  
-✅ **API REST Flask** con 27 endpoints HTTP protegidos  
-✅ **Autenticación JWT (HS256)** con expiración configurable  
-✅ **Contraseñas hasheadas con bcrypt** (factor de costo 12, estándar OWASP)  
+✅ **Autenticación JWT** - Acceso seguro con tokens firmados y expiración configurable  
+✅ **Contraseñas encriptadas** - Hash bcrypt con factor de costo 12 (estándar OWASP)  
+✅ **Registro de donantes** - Administración centralizada de donadores  
+✅ **Gestión de productos** - Catálogo de alimentos por categoría  
+✅ **Control de lotes** - Seguimiento de códigos, vencimientos y cantidades  
+✅ **Registros de donaciones** - Entrada de alimentos al sistema  
+✅ **Entregas a beneficiarios** - Control de distribución de alimentos  
+✅ **Inventario vigente** - Consulta de stock disponible  
+✅ **Alertas de vencimiento** - Identificación de lotes próximos a vencer  
+✅ **Trazabilidad completa** - Historial completo de cada lote desde origen hasta destino  
 
 ## Especificaciones técnicas
 
 - **Lenguaje**: Python 3.8+
-- **Framework API**: Flask 3.0+
+- **Framework**: Flask 3.0+
 - **Base de datos**: MySQL 5.7+ / MariaDB 10.3+
-- **Acceso a datos**: pyodbc + patrón Repository + Stored Procedures
+- **ORM/Conexión**: pyodbc + patrón Repository + Stored Procedures
 - **Autenticación**: PyJWT 2.8+ (HS256)
 - **Encriptación**: bcrypt 4.0+ (cost factor 12)
 - **Gestión de secretos**: Variables de entorno con python-dotenv
 - **Licencia**: LGPL 2.1 o posterior
 
-## Alcance
-
-El proyecto incluye la capa de persistencia completa más la API REST con autenticación:
-
-- Conexión a base de datos
-- Definición de modelos
-- Implementación de repositorios
-- Script de creación de esquema, datos base y procedimientos almacenados
-- API REST Flask con autenticación JWT
-- Módulo de seguridad con bcrypt y JWT
-
 ## Estructura
 
-```
+\`\`\`
 ├── main_trazabilidad.py
 │   └─ Punto de entrada de la aplicación
 ├── api_trazabilidad.py
@@ -58,7 +50,7 @@ El proyecto incluye la capa de persistencia completa más la API REST con autent
 │   └─ Acceso a datos mediante patrón Repository
 └── trazabilidad_alimentos.sql
     └─ Script con tablas y procedimientos almacenados
-```
+\`\`\`
 
 ## Instalación rápida
 
@@ -70,167 +62,180 @@ El proyecto incluye la capa de persistencia completa más la API REST con autent
 
 ### 2. Clonar o descargar
 
-```bash
-git clone https://github.com/tu-usuario/trazabilidad-donaciones-repositorios.git
-cd trazabilidad-donaciones-repositorios
-```
+\`\`\`bash
+git clone https://github.com/jamearju12/TRAZABILIDAD_DONACIONES.git
+cd TRAZABILIDAD_DONACIONES
+\`\`\`
 
 ### 3. Crear entorno virtual
 
 **macOS/Linux**
 
-```bash
+\`\`\`bash
 python3 -m venv .venv
 source .venv/bin/activate
-```
+\`\`\`
 
 **Windows (PowerShell)**
 
-```powershell
+\`\`\`powershell
 py -3 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-```
+\`\`\`
 
 **Windows (CMD)**
 
-```bat
+\`\`\`bat
 py -3 -m venv .venv
 .venv\Scripts\activate.bat
-```
+\`\`\`
 
 ### 4. Instalar dependencias
 
 **macOS/Linux**
 
-```bash
+\`\`\`bash
 python3 -m pip install -r requirements.txt
-```
+\`\`\`
 
 **Windows**
 
-```powershell
+\`\`\`powershell
 py -3 -m pip install -r requirements.txt
-```
+\`\`\`
 
 ### 5. Configurar base de datos
 
-**macOS/Linux o Git Bash**
-
-```bash
+\`\`\`bash
 mysql -u root -p < trazabilidad_alimentos.sql
-```
-
-**Windows PowerShell**
-
-```powershell
-Get-Content .\trazabilidad_alimentos.sql | mysql -u root -p
-```
+\`\`\`
 
 ### 6. Configurar secretos
 
 **macOS/Linux**
 
-```bash
+\`\`\`bash
 cp .env.example .env
-```
+\`\`\`
 
 **Windows (PowerShell o CMD)**
 
-```bat
+\`\`\`bat
 copy .env.example .env
-```
+\`\`\`
 
-Editar `.env` con credenciales reales:
-- `DB_DRIVER_PATH`
-- `DB_SERVER`
-- `DB_NAME`
-- `DB_USER`
-- `DB_PASSWORD`
-- `JWT_SECRET_KEY` (mínimo 32 caracteres, generar con `python3 -c "import secrets; print(secrets.token_hex(32))"`)
-- `JWT_EXPIRATION_HOURS` (por defecto `8`)
-- `API_HOST` (por defecto `127.0.0.1`)
-- `API_PORT` (por defecto `8090`)
-
-## Repositorios incluidos
-
-- `donantes_repository.py`: registro, consulta, actualización e inactivación de donantes
-- `productos_repository.py`: CRUD de productos
-- `donaciones_repository.py`: creación de donaciones y detalle de lotes
-- `entregas_repository.py`: creación de entregas y descuentos de inventario
-- `inventario_repository.py`: consultas de inventario vigente, lotes por vencer y trazabilidad
-- `catalogos_repository.py`: consultas de roles, usuarios, sedes, categorías, lotes y movimientos
-
-## Uso
-
-La API expone endpoints REST protegidos con JWT. Todos los requests (excepto `/health` y `/login`) requieren el header `Authorization: Bearer <token>`.
-
-### Ejemplo mínimo de conexión
-
-**macOS/Linux**
-
-```bash
-python3
-```
-
-**Windows**
-
-```powershell
-py -3
-```
-
-```python
-from donantes_repository import DonantesRepository
-
-repo = DonantesRepository()
-print(repo.get_all())
-```
+Editar \`.env\` con credenciales reales:
+- \`DB_DRIVER_PATH\`
+- \`DB_SERVER\`
+- \`DB_NAME\`
+- \`DB_USER\`
+- \`DB_PASSWORD\`
+- \`API_HOST\` (por defecto \`127.0.0.1\`)
+- \`API_PORT\` (por defecto \`8090\`)
+- \`JWT_SECRET_KEY\` — clave secreta para firmar tokens (mínimo 32 caracteres). Generar con:
+  \`\`\`bash
+  python3 -c "import secrets; print(secrets.token_hex(32))"
+  \`\`\`
+- \`JWT_EXPIRATION_HOURS\` — tiempo de vida del token (por defecto \`8\`)
 
 ### 7. Configurar contraseña del administrador
 
-```bash
-python3 setup_admin.py
-```
+**macOS/Linux**
 
-Este script solicita una contraseña para `admin@trazabilidad.local`, genera el hash bcrypt y lo guarda en la base de datos. Ejecutar **una sola vez** después de cargar el SQL.
+\`\`\`bash
+python3 setup_admin.py
+\`\`\`
+
+**Windows**
+
+\`\`\`powershell
+py -3 setup_admin.py
+\`\`\`
+
+Este script solicita la contraseña del usuario \`admin@trazabilidad.local\` y guarda el hash bcrypt en la base de datos. Ejecutar **una sola vez** tras cargar el SQL.
 
 ### 8. Iniciar la API
 
 **macOS/Linux**
 
-```bash
+\`\`\`bash
 python3 api_trazabilidad.py
-```
+\`\`\`
 
 **Windows**
 
-```powershell
+\`\`\`powershell
 py -3 api_trazabilidad.py
-```
+\`\`\`
 
-La API quedará disponible en `http://127.0.0.1:8090/trazabilidad/`.
+La API estará disponible en: \`http://127.0.0.1:8090\`
 
 ### Consultar ejemplos de uso
 
-Ver [EJEMPLOS.md](EJEMPLOS.md) para ejemplos de autenticación y uso de endpoints via curl.
+Ver [EJEMPLOS.md](EJEMPLOS.md) para ejemplos completos con curl.
 
 ## Endpoints principales
 
-| Método | Ruta | Auth | Descripción |
-|--------|------|------|-------------|
-| GET | `/trazabilidad/health` | No | Estado de la API y BD |
-| POST | `/trazabilidad/login` | No | Obtener token JWT |
-| GET | `/trazabilidad/donantes` | JWT | Listar donantes |
-| POST | `/trazabilidad/donantes` | JWT | Crear donante |
-| GET | `/trazabilidad/productos` | JWT | Listar productos |
-| POST | `/trazabilidad/donaciones` | JWT | Registrar donación |
-| GET | `/trazabilidad/inventario/vigente` | JWT | Inventario disponible |
-| GET | `/trazabilidad/trazabilidad/lote/{id}` | JWT | Trazabilidad de lote |
+### Autenticación
 
-## Notas de diseño
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | \`/trazabilidad/login\` | Obtener token JWT | No requerida |
+| GET | \`/trazabilidad/health\` | Verificar estado de la API | No requerida |
 
-- Las escrituras críticas del dominio usan procedimientos almacenados para concentrar reglas de negocio en base de datos.
-- Las consultas simples de lectura se resuelven directamente en los repositorios con `SELECT` parametrizados o consultas de catálogo.
-- El módulo de donantes implementa borrado lógico con el campo `activo` para no perder referencias históricas en donaciones.
+> Todos los demás endpoints requieren el header: \`Authorization: Bearer <token>\`
+
+### Donantes
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | \`/trazabilidad/donantes\` | Listar donantes |
+| POST | \`/trazabilidad/donantes\` | Crear donante |
+| GET | \`/trazabilidad/donantes/<int:donante_id>\` | Obtener donante por ID |
+| PUT | \`/trazabilidad/donantes/<int:donante_id>\` | Actualizar donante |
+| DELETE | \`/trazabilidad/donantes/<int:donante_id>\` | Inactivar donante |
+
+### Productos
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | \`/trazabilidad/productos\` | Listar productos |
+| POST | \`/trazabilidad/productos\` | Crear producto |
+| GET | \`/trazabilidad/productos/<int:producto_id>\` | Obtener producto por ID |
+| PUT | \`/trazabilidad/productos/<int:producto_id>\` | Actualizar producto |
+| DELETE | \`/trazabilidad/productos/<int:producto_id>\` | Eliminar producto |
+
+### Donaciones
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | \`/trazabilidad/donaciones\` | Listar donaciones |
+| POST | \`/trazabilidad/donaciones\` | Crear donación |
+| GET | \`/trazabilidad/donaciones/detalles\` | Listar detalles de donación |
+| POST | \`/trazabilidad/donaciones/detalles\` | Agregar detalle de donación |
+
+### Entregas
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | \`/trazabilidad/entregas\` | Listar entregas |
+| POST | \`/trazabilidad/entregas\` | Crear entrega |
+| GET | \`/trazabilidad/entregas/detalles\` | Listar detalles de entrega |
+| POST | \`/trazabilidad/entregas/detalles\` | Agregar detalle de entrega |
+
+### Catálogos y trazabilidad
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | \`/trazabilidad/roles\` | Listar roles |
+| GET | \`/trazabilidad/usuarios\` | Listar usuarios |
+| GET | \`/trazabilidad/sedes\` | Listar sedes |
+| GET | \`/trazabilidad/categorias\` | Listar categorías de alimento |
+| GET | \`/trazabilidad/lotes\` | Listar lotes |
+| GET | \`/trazabilidad/movimientos\` | Listar movimientos de inventario |
+| GET | \`/trazabilidad/inventario\` | Ver inventario vigente |
+| GET | \`/trazabilidad/inventario/por-vencer\` | Lotes próximos a vencer |
+| GET | \`/trazabilidad/lotes/<int:lote_id>/trazabilidad\` | Historial completo del lote |
 
 ## Contribuir
 
@@ -247,4 +252,4 @@ Ver [LICENSE](LICENSE) para más detalles.
 
 ---
 
-**Nota**: Esta carpeta corresponde a la entrega parcial enfocada en persistencia y base de datos.
+**Nota**: Sistema diseñado bajo principios de software libre y transparencia.

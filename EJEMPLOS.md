@@ -1,12 +1,12 @@
-# Ejemplos de uso - API REST y repositorios
+# Ejemplos de uso - API Endpoints
 
-## Preparación previa
+## Setup previo
 
 ```bash
 # 1. Crear archivo .env desde .env.example
 cp .env.example .env
 
-# 2. Editar .env con credenciales reales
+# 2. Editar .env con credenciales reales (incluir JWT_SECRET_KEY)
 nano .env
 
 # 3. Instalar dependencias
@@ -15,24 +15,32 @@ python3 -m pip install -r requirements.txt
 # 4. Cargar el esquema SQL
 mysql -u root -p < trazabilidad_alimentos.sql
 
-# 5. Configurar contraseña del administrador
+# 5. Configurar contraseña del admin (solo la primera vez)
 python3 setup_admin.py
 
-# 6. Iniciar la API
+# 6. Levantar la API
 python3 api_trazabilidad.py
 ```
 
 ## Autenticación
 
-### Obtener token JWT
+Todos los endpoints (excepto `/health` y `/login`) requieren un token JWT en el header `Authorization`.
+
+### Obtener Token (Login)
 
 ```bash
 curl -s -X POST http://127.0.0.1:8090/trazabilidad/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "admin@trazabilidad.local", "password": "tu-contraseña"}'
+  -d '{"email": "admin@trazabilidad.local", "password": "tu-contraseña"}' | jq .
 ```
 
-Guardar el token para usarlo en los siguientes ejemplos:
+Guarda el `access_token` de la respuesta. En los ejemplos siguientes se asume que lo tienes guardado:
+
+```bash
+TOKEN="pega-aqui-el-access_token"
+```
+
+O expórtalo automáticamente:
 
 ```bash
 TOKEN=$(curl -s -X POST http://127.0.0.1:8090/trazabilidad/login \
@@ -41,219 +49,140 @@ TOKEN=$(curl -s -X POST http://127.0.0.1:8090/trazabilidad/login \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['datos']['access_token'])")
 ```
 
-## Ejemplos via API REST (curl)
-
-### Verificar estado
+### Health Check (no requiere token)
 
 ```bash
-curl -s http://127.0.0.1:8090/trazabilidad/health | python3 -m json.tool
+curl -s http://127.0.0.1:8090/trazabilidad/health | jq .
 ```
 
-### Listar donantes
+## Ejemplos con curl
 
-```bash
-curl -s http://127.0.0.1:8090/trazabilidad/donantes \
-  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
-```
-
-### Crear un donante
+### Crear Donante
 
 ```bash
 curl -s -X POST http://127.0.0.1:8090/trazabilidad/donantes \
-  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{
-    "nombre": "Asociacion Red Solidaria",
+    "nombre": "Fundacion Comida Para Todos",
     "tipo_documento": "NIT",
-    "numero_documento": "901555777-1",
-    "telefono": "3100000000",
-    "email": "contacto@redsolidaria.org"
+    "numero_documento": "900112233",
+    "telefono": "3101234567",
+    "email": "contacto@comidaparatodos.org"
   }'
 ```
 
-### Listar productos
+### Listar Donantes
+
+```bash
+curl -s http://127.0.0.1:8090/trazabilidad/donantes \
+  -H "Authorization: Bearer $TOKEN" | jq .
+```
+
+### Crear Producto
+
+```bash
+curl -s -X POST http://127.0.0.1:8090/trazabilidad/productos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "nombre": "Lentejas 1kg",
+    "categoria_id": 1,
+    "unidad_medida": "UN",
+    "perecedero": 0
+  }'
+```
+
+### Listar Productos
 
 ```bash
 curl -s http://127.0.0.1:8090/trazabilidad/productos \
-  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+  -H "Authorization: Bearer $TOKEN" | jq .
 ```
 
-### Registrar una donación
+### Crear Donacion
 
 ```bash
 curl -s -X POST http://127.0.0.1:8090/trazabilidad/donaciones \
-  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{
     "donante_id": 1,
     "sede_id": 1,
     "usuario_id": 1,
-    "observacion": "Donacion para inventario base"
+    "observacion": "Donacion inicial de prueba"
   }'
 ```
 
-### Agregar lote a una donación
+### Agregar Detalle a Donacion
 
 ```bash
-curl -s -X POST http://127.0.0.1:8090/trazabilidad/donaciones/1/detalle \
-  -H "Authorization: Bearer $TOKEN" \
+curl -s -X POST http://127.0.0.1:8090/trazabilidad/donaciones/detalles \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{
+    "donacion_id": 1,
     "producto_id": 1,
-    "lote_codigo": "L-2026-001",
-    "fecha_vencimiento": "2026-12-15",
-    "cantidad": 120,
-    "peso_kg": 120
+    "lote_codigo": "LOTE-001-2026",
+    "fecha_vencimiento": "2026-10-08",
+    "cantidad": 50,
+    "peso_kg": 50
   }'
 ```
 
-### Consultar inventario vigente
+### Crear Entrega
 
 ```bash
-curl -s http://127.0.0.1:8090/trazabilidad/inventario/vigente \
-  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+curl -s -X POST http://127.0.0.1:8090/trazabilidad/entregas \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "sede_id": 1,
+    "beneficiario": "Comedor Comunitario El Buen Vivir",
+    "usuario_id": 1,
+    "observacion": "Entrega semanal"
+  }'
 ```
 
-### Consultar trazabilidad de un lote
+### Agregar Detalle a Entrega
 
 ```bash
-curl -s http://127.0.0.1:8090/trazabilidad/trazabilidad/lote/1 \
-  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+curl -s -X POST http://127.0.0.1:8090/trazabilidad/entregas/detalles \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "entrega_id": 1,
+    "lote_id": 1,
+    "cantidad": 25,
+    "peso_kg": 25
+  }'
 ```
 
-## Uso desde Python
+### Ver Inventario Vigente
 
-### Consultar donantes
-
-```python
-from donantes_repository import DonantesRepository
-
-repo = DonantesRepository()
-donantes = repo.get_all()
-
-for donante in donantes:
-    print(donante)
+```bash
+curl -s http://127.0.0.1:8090/trazabilidad/inventario \
+  -H "Authorization: Bearer $TOKEN" | jq .
 ```
 
-### Crear un donante
+### Ver Lotes por Vencer (próximos 30 días)
 
-```python
-from donantes_repository import DonantesRepository
-from models_trazabilidad import Donante
-
-repo = DonantesRepository()
-
-nuevo = Donante(
-    nombre="Asociacion Red Solidaria",
-    tipo_documento="NIT",
-    numero_documento="901555777-1",
-    telefono="3100000000",
-    email="contacto@redsolidaria.org"
-)
-
-donante_id = repo.insert(nuevo)
-print(donante_id)
+```bash
+curl -s "http://127.0.0.1:8090/trazabilidad/inventario/por-vencer?dias=30" \
+  -H "Authorization: Bearer $TOKEN" | jq .
 ```
 
-### Actualizar e inactivar donantes
+### Obtener Trazabilidad Completa de un Lote
 
-```python
-from donantes_repository import DonantesRepository
-from models_trazabilidad import Donante
-
-repo = DonantesRepository()
-
-repo.update(Donante(
-    id=1,
-    nombre="Asociacion Red Solidaria Actualizada",
-    telefono="3111111111",
-    email="nuevo@redsolidaria.org",
-    activo=1
-))
-
-repo.delete(1)
+```bash
+curl -s http://127.0.0.1:8090/trazabilidad/lotes/1/trazabilidad \
+  -H "Authorization: Bearer $TOKEN" | jq .
 ```
 
-### Crear un producto
+## Flujo completo de prueba
 
-```python
-from productos_repository import ProductosRepository
-from models_trazabilidad import Producto
-
-repo = ProductosRepository()
-
-producto_id = repo.insert(Producto(
-    nombre="Frijol cargamanto",
-    categoria_id=1,
-    unidad_medida="KG",
-    perecedero=0
-))
-
-print(producto_id)
+```bash
+python3 main_trazabilidad.py
 ```
 
-### Registrar una donación y su lote
-
-```python
-from donaciones_repository import DonacionesRepository
-from models_trazabilidad import Donacion, DetalleDonacion
-
-repo = DonacionesRepository()
-
-donacion_id = repo.insert(Donacion(
-    donante_id=1,
-    sede_id=1,
-    usuario_id=1,
-    observacion="Donacion para inventario base"
-))
-
-lote_id = repo.add_detalle(DetalleDonacion(
-    donacion_id=donacion_id,
-    producto_id=1,
-    lote_codigo="L-2026-001",
-    fecha_vencimiento="2026-12-15",
-    cantidad=120,
-    peso_kg=120
-))
-
-print(donacion_id, lote_id)
-```
-
-### Registrar una entrega
-
-```python
-from entregas_repository import EntregasRepository
-from models_trazabilidad import Entrega, DetalleEntrega
-
-repo = EntregasRepository()
-
-entrega_id = repo.insert(Entrega(
-    sede_id=1,
-    beneficiario="Comedor Esperanza",
-    usuario_id=1,
-    observacion="Entrega programada"
-))
-
-repo.add_detalle(DetalleEntrega(
-    entrega_id=entrega_id,
-    lote_id=1,
-    cantidad=20,
-    peso_kg=20
-))
-```
-
-### Consultar inventario y trazabilidad
-
-```python
-from inventario_repository import InventarioRepository
-
-repo = InventarioRepository()
-
-print(repo.get_vigente())
-print(repo.get_por_vencer(30))
-print(repo.get_trazabilidad_lote(1))
-```
-
-## Nota de diseño
-
-El método `delete` de `DonantesRepository` implementa borrado lógico: actualiza el campo `activo` a `0` en lugar de eliminar físicamente el registro. Esto conserva la integridad histórica de las donaciones relacionadas.
+Este script ejecuta un flujo CRUD completo: crea donante, producto, donación, entrega y muestra inventario e historial.
