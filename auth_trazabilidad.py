@@ -2,18 +2,16 @@ import os
 import datetime
 import functools
 
+import bcrypt as _bcrypt
+
 import flask
 import jwt
-from passlib.context import CryptContext
 from dotenv import load_dotenv
 
 from database_trazabilidad import DatabaseTrazabilidad
 
 
 load_dotenv()
-
-# Contexto de hashing: bcrypt con factor de costo 12 (OWASP recomendado)
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
 
 
 # ---------------------------------------------------------------------------
@@ -22,12 +20,12 @@ _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__round
 
 def hash_password(password: str) -> str:
     """Genera el hash bcrypt de una contraseña en texto plano."""
-    return _pwd_context.hash(password)
+    return _bcrypt.hashpw(password.encode("utf-8"), _bcrypt.gensalt(rounds=12)).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Verifica una contraseña en texto plano contra su hash bcrypt."""
-    return _pwd_context.verify(plain, hashed)
+    return _bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
 
 # ---------------------------------------------------------------------------

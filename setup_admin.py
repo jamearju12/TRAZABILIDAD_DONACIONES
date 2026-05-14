@@ -13,15 +13,14 @@ import getpass
 import os
 import sys
 
+import bcrypt
+
 from dotenv import load_dotenv
-from passlib.context import CryptContext
 
 from database_trazabilidad import DatabaseTrazabilidad
 
 
 load_dotenv()
-
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
 
 
 def _prompt_password(prompt: str) -> str:
@@ -38,7 +37,7 @@ def _prompt_password(prompt: str) -> str:
 
 def set_password(email: str, password: str) -> bool:
     """Actualiza el hash bcrypt de un usuario identificado por email."""
-    hashed = _pwd_context.hash(password)
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8")
 
     connection = DatabaseTrazabilidad().get_connection()
     cursor = connection.cursor()
@@ -59,7 +58,7 @@ def set_password(email: str, password: str) -> bool:
 
 def create_user(nombre: str, email: str, password: str, rol_nombre: str = "ADMIN") -> int | None:
     """Crea un nuevo usuario con contraseña hasheada. Retorna el id o None."""
-    hashed = _pwd_context.hash(password)
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8")
 
     connection = DatabaseTrazabilidad().get_connection()
     cursor = connection.cursor()
